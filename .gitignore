@@ -1,3 +1,9 @@
+# Bot token
+.token
+
+# Ignore Vim .swp files
+*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
