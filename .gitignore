@@ -4,6 +4,9 @@
 # Ignore Vim .swp files
 *.swp
 
+# Ignore PyCharm project files
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
