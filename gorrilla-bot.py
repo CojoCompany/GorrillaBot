@@ -1,6 +1,4 @@
 
-import json
-import time
 import requests
 
 LONG_POLLING = 10
