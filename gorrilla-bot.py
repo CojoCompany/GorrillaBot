@@ -8,7 +8,7 @@ LONG_POLLING = 10
 if __name__ == '__main__':
 
     with open('.token', 'r') as f:
-        token = f.read()[:-1]
+        token = f.read().rstrip()
     url = 'https://api.telegram.org/bot{}/'.format(token)
 
     update_id = 0
