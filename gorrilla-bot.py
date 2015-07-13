@@ -13,14 +13,14 @@ if __name__ == '__main__':
 
     update_id = 0
     while True:
-        params = {'offset' : update_id + 1, 'timeout': LONG_POLLING}
+        params = {'offset': update_id + 1, 'timeout': LONG_POLLING}
         response = requests.get(url + 'getUpdates', params)
         # TODO: handle response errors
         data = response.json()
         for update in data['result']:
             update_id = update['update_id']
-            if not 'message' in update:
+            if 'message' not in update:
                 continue
-            params = {'chat_id' : update['message']['chat']['id'],
-                      'text' : update['message']['text']}
+            params = {'chat_id': update['message']['chat']['id'],
+                      'text': update['message']['text']}
             requests.get(url + 'sendMessage', params)
