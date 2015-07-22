@@ -1,0 +1,7 @@
+trap break INT
+
+while true; do
+	python gorrilla-bot.py
+	git pull
+	sleep 5s
+done
