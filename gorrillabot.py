@@ -49,15 +49,21 @@ class GorrillaBot():
         if not updates['result']:
             return False
         for update in updates['result']:
+            # TODO: custom class for `update`
             self.last_update = update['update_id']
             if 'message' not in update:
                 continue
-            if self.process_command(update['message']['text']):
+            if self.process_command(update):
                 continue
-            params = {'chat_id': update['message']['chat']['id'],
-                      'text': update['message']['text']}
-            requests.get(self.url + 'sendMessage', params)
+            self.process_message(update)
         return True
+
+    def send_message(self, chat_id, text):
+        """
+        Send a message.
+        """
+        params = {'chat_id': chat_id, 'text': text}
+        requests.get(self.url + 'sendMessage', params)
 
     def add_command_handler(self, command, handler):
         """
@@ -69,11 +75,12 @@ class GorrillaBot():
             command = '/' + command
         self.command_handler[command] = handler
 
-    def process_command(self, message):
+    def process_command(self, update):
         """
         Process a message and return `True` if the message was successfuly
         processed as a command.
         """
+        message = update['message']['text']
         if not message.startswith('/'):
             return False
         command = message.split()[0]
@@ -84,8 +91,16 @@ class GorrillaBot():
         if nparams == 1:
             handler(self)
         elif nparams == 2:
-            handler(self, message.lstrip(command).lstrip())
+            handler(self, update)
         return True
+
+    def process_message(self, update):
+        """
+        Process an incoming message.
+        """
+        chat_id = update['message']['chat']['id']
+        text = update['message']['text']
+        self.send_message(chat_id, text)
 
     def log(self, data):
         """
@@ -99,8 +114,9 @@ def die(bot):
     bot.keep_alive = False
 
 
-def echo(bot, message):
-    bot.log(message)
+def echo(bot, command):
+    message = ' '.join(command['message']['text'].split(' ')[1:])
+    bot.send_message(command['message']['chat']['id'], message)
 
 
 if __name__ == '__main__':
