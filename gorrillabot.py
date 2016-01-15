@@ -23,13 +23,13 @@ class GorrillaBot():
         Main loop.
         """
         while self.keep_alive:
-            response = self.get_updates(self.last_update, self.timeout)
-            self.process_response(response)
+            updates = self.get_updates(self.last_update, self.timeout)
+            self.process_updates(updates)
         # Get remaining updates from the server or, at least, notify the
         # reception of the messages processed
         while True:
-            response = self.get_updates(self.last_update, 0)
-            if not self.process_response(response):
+            updates = self.get_updates(self.last_update, 0)
+            if not self.process_updates(updates):
                 break
 
     def get_updates(self, offset, timeout):
@@ -37,18 +37,18 @@ class GorrillaBot():
         Get updates from the server.
         """
         params = {'offset': offset + 1, 'timeout': timeout}
-        response = requests.get(self.url + 'getUpdates', params)
-        return response
+        updates = requests.get(self.url + 'getUpdates', params)
+        return updates
 
-    def process_response(self, response):
+    def process_updates(self, updates):
         """
-        Process response from the server.
+        Process updates from the server.
         """
         # TODO: handle response errors
-        data = response.json()
-        if not data['result']:
+        updates = updates.json()
+        if not updates['result']:
             return False
-        for update in data['result']:
+        for update in updates['result']:
             self.last_update = update['update_id']
             if 'message' not in update:
                 continue
