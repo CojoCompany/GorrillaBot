@@ -1,6 +1,7 @@
 """
 GorrillaBot main file.
 """
+import inspect
 import requests
 
 
@@ -15,6 +16,7 @@ class GorrillaBot():
         self.url = 'https://api.telegram.org/bot{}/'.format(token)
         self.keep_alive = True
         self.last_update = 0
+        self.command_handler = {}
 
     def run(self):
         """
@@ -27,11 +29,8 @@ class GorrillaBot():
         # reception of the messages processed
         while True:
             response = self.get_updates(self.last_update, 0)
-            # TODO: handle response errors
-            data = response.json()
-            if not data['result']:
+            if not self.process_response(response):
                 break
-            self.process_response(response)
 
     def get_updates(self, offset, timeout):
         """
@@ -47,6 +46,8 @@ class GorrillaBot():
         """
         # TODO: handle response errors
         data = response.json()
+        if not data['result']:
+            return False
         for update in data['result']:
             self.last_update = update['update_id']
             if 'message' not in update:
@@ -56,22 +57,55 @@ class GorrillaBot():
             params = {'chat_id': update['message']['chat']['id'],
                       'text': update['message']['text']}
             requests.get(self.url + 'sendMessage', params)
+        return True
 
-    def process_command(self, text):
+    def add_command_handler(self, command, handler):
+        """
+        Add a command handler.
+        """
+        if ' ' in command:
+            raise ValueError('Command must not have spaces!')
+        if not command.startswith('/'):
+            command = '/' + command
+        self.command_handler[command] = handler
+
+    def process_command(self, message):
         """
         Process a message and return `True` if the message was successfuly
         processed as a command.
         """
-        if text[0] != '/':
+        if not message.startswith('/'):
             return False
-        command = text.split()
-        if command[0] == '/upgrade':
-            print('ooops')
-            self.keep_alive = False
+        command = message.split()[0]
+        if not command in self.command_handler:
+            return False
+        handler = self.command_handler[command]
+        nparams = len(inspect.signature(handler).parameters)
+        if nparams == 1:
+            handler(self)
+        elif nparams == 2:
+            handler(self, message.lstrip(command).lstrip())
         return True
+
+    def log(self, data):
+        """
+        A simple logging method which, for now, only prints to stdout.
+        """
+        print(data)
+
+
+def die(bot):
+    bot.log('Dying...')
+    bot.keep_alive = False
+
+
+def echo(bot, message):
+    bot.log(message)
 
 
 if __name__ == '__main__':
 
     bot = GorrillaBot()
+    bot.add_command_handler('die', die)
+    bot.add_command_handler('echo', echo)
     bot.run()
